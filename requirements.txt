@@ -1,0 +1,11 @@
+streamlit
+pyrofork
+beautifulsoup4
+curl-cffi
+requests
+tgcrypto
+opencv-python-headless
+pillow
+numpy
+websockets
+indic-num2words
