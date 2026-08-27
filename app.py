@@ -21,6 +21,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceRepl
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageChops
 import intro
 import thumbnail
+import thumb2
 import websockets
 import requests
 import json
