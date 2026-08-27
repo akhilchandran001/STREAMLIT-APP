@@ -1532,7 +1532,50 @@ async def run_pyrofork_bot():
                     caption=f"🖼️ **YouTube Thumbnail** • `{lottery_title}` (`{target_date}`)"
                 )
             await status_msg.delete()
+        @app.on_message(filters.command("genthumb2") & filters.private)
+        async def handle_genthumb2(client, message):
+            draws = fetch_last_10_draws()
+            text_lines = ["🖼️ **Select a draw date to generate Thumbnail (Style 2):**\n"]
+            buttons = []
+            for item in draws:
+                d_str = item['date']
+                buttons.append([InlineKeyboardButton(f"📅 {d_str} | {item['title'][:20]}", callback_data=f"th2_{d_str}")])
+            await message.reply_text("\n".join(text_lines), reply_markup=InlineKeyboardMarkup(buttons))
 
+        @app.on_callback_query(filters.regex(r"^th2_(\d{2}-\d{2}-\d{4})"))
+        async def handle_thumb2_callback(client, callback_query):
+            target_date = callback_query.matches[0].group(1)
+            await callback_query.answer()
+            status_msg = await callback_query.message.reply_text(f"🎨 **Generating YouTube Thumbnail (Style 2) for `{target_date}`...**")
+            
+            if target_date in GLOBAL_STATE.scraped_cache:
+                c_data = GLOBAL_STATE.scraped_cache[target_date]
+                lottery_title = c_data["lottery_title"]
+            else:
+                draws = fetch_last_10_draws()
+                target_entry = next((d for d in draws if d['date'] == target_date), None)
+                target_url = target_entry['url'] if target_entry else (draws[0]['url'] if draws else "")
+                if target_url:
+                    _, _, _, _, _, _, lottery_title = parse_lottery_result_page(target_url)
+                else:
+                    lottery_title = "KERALA LOTTERY"
+            
+            thumb_path = os.path.join(DOWNLOAD_DIR, f"thumb2_{target_date}.png")
+            await asyncio.to_thread(thumb2.generate_thumbnail, lottery_title, target_date, thumb_path)
+            
+            if os.path.exists(thumb_path):
+                await client.send_photo(
+                    chat_id=callback_query.message.chat.id,
+                    photo=thumb_path,
+                    caption=f"🖼️ **YouTube Thumbnail (Style 2)** • `{lottery_title}` (`{target_date}`)"
+                )
+                await broadcast_to_channel(
+                    client,
+                    photo_path=thumb_path,
+                    caption=f"🖼️ **YouTube Thumbnail (Style 2)** • `{lottery_title}` (`{target_date}`)"
+                )
+            await status_msg.delete()
+            
         @app.on_callback_query(filters.regex(r"^get_(\d{2}-\d{2}-\d{4})"))
         async def handle_get_callback(client, callback_query):
             await callback_query.answer()
