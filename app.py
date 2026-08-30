@@ -1576,6 +1576,56 @@ async def run_pyrofork_bot():
                     caption=f"🖼️ **YouTube Thumbnail (Style 2)** • `{lottery_title}` (`{target_date}`)"
                 )
             await status_msg.delete()
+        @app.on_message(filters.command("genthumb3") & filters.private)
+        async def handle_genthumb3(client, message):
+            draws = fetch_last_10_draws()
+            text_lines = ["🖼️ **Select a draw date to generate Tri-Language Thumbnails (EN / ML / TA):**\n"]
+            buttons = []
+            for item in draws:
+                d_str = item['date']
+                buttons.append([InlineKeyboardButton(f"📅 {d_str} | {item['title'][:20]}", callback_data=f"th3_{d_str}")])
+            await message.reply_text("\n".join(text_lines), reply_markup=InlineKeyboardMarkup(buttons))
+
+        @app.on_callback_query(filters.regex(r"^th3_(\d{2}-\d{2}-\d{4})"))
+        async def handle_thumb3_callback(client, callback_query):
+            target_date = callback_query.matches[0].group(1)
+            await callback_query.answer()
+            status_msg = await callback_query.message.reply_text(f"🎨 **Generating 3 Thumbnails (EN/ML/TA) for `{target_date}`...**")
+            
+            lottery_title = "KERALA LOTTERY"
+            prize_heading = ""
+            
+            if target_date in GLOBAL_STATE.scraped_cache:
+                c_data = GLOBAL_STATE.scraped_cache[target_date]
+                lottery_title = c_data.get("lottery_title", "KERALA LOTTERY")
+                prize_heading = c_data.get("prize_headings", {}).get("1st Prize", "")
+            else:
+                draws = fetch_last_10_draws()
+                target_entry = next((d for d in draws if d['date'] == target_date), None)
+                target_url = target_entry['url'] if target_entry else (draws[0]['url'] if draws else "")
+                if target_url:
+                    _, _, _, _, _, prize_headings, lottery_title = parse_lottery_result_page(target_url)
+                    prize_heading = prize_headings.get("1st Prize", "") if prize_headings else ""
+            
+            prize_money_str = "1 CRORE"
+            if "₹" in prize_heading:
+                prize_money_str = prize_heading.split("₹")[-1].strip()
+                
+            results = await asyncio.to_thread(thumb3.generate_tri_thumbnails, lottery_title, target_date, DOWNLOAD_DIR, prize_money_str)
+            
+            captions = {
+                "en": f"🇬🇧 **English Thumbnail** • `{lottery_title}` (`{target_date}`)",
+                "ml": f"🌴 **Malayalam Thumbnail** • `{lottery_title}` (`{target_date}`)",
+                "ta": f"🛕 **Tamil Thumbnail** • `{lottery_title}` (`{target_date}`)"
+            }
+            
+            for lang, img_path in results.items():
+                if img_path and os.path.exists(img_path):
+                    cap = captions.get(lang, f"🖼️ **Thumbnail** • `{lottery_title}` (`{target_date}`)")
+                    await client.send_photo(chat_id=callback_query.message.chat.id, photo=img_path, caption=cap)
+                    await broadcast_to_channel(client, photo_path=img_path, caption=cap)
+                    
+            await status_msg.delete()
             
         @app.on_callback_query(filters.regex(r"^get_(\d{2}-\d{2}-\d{4})"))
         async def handle_get_callback(client, callback_query):
