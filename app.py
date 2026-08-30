@@ -22,6 +22,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageChops
 import intro
 import thumbnail
 import thumb2
+import thumb3
 import websockets
 import requests
 import json
