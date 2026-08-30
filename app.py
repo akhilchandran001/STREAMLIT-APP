@@ -1467,8 +1467,9 @@ async def run_pyrofork_bot():
                 "**🌟 Available Commands:**\n"
                 "• 🚀 `/generate` - Fetch today's result & render pipeline\n"
                 "• 📅 `/gencustom` - Select from last 10 draw dates\n"
-                "• 🖼️ `/genthumb` - Generate YouTube thumbnail (Style 1 3D)\n"
-                "• 🖼️ `/genthumb2` - Generate YouTube thumbnail (Style 2 Striped)\n"
+                "• 🖼️ `/genthumb` - Generate 3D Style 1 Thumbnail\n"
+                "• 🖼️ `/genthumb2` - Generate Striped Style 2 Thumbnail\n"
+                "• 🖼️ `/genthumb3` - Generate Tri-Language (EN/ML/TA) Thumbnails\n"
                 "• 🔗 `/combine` - Stitch uploaded videos together\n"
                 "• ℹ️ `/start` - Show this menu"
             )
