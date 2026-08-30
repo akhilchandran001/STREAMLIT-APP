@@ -17,34 +17,64 @@ from bs4 import BeautifulSoup
 from PIL import Image, ImageDraw, ImageFont
 
 # -------------------------------------------------------------
-# CONFIGURATION & STORAGE PATHS (STRICTLY REPO ROOT)
+# CONFIGURATION & STORAGE PATHS
 # -------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FEED_URL = "https://www.keralalotteries.net/feeds/posts/default?alt=json&max-results=10"
+
+# Target 'Lottery' folder in the repo, with fallback to storage pictures
 PICTURES_DIR = os.path.join(BASE_DIR, "Lottery")
+if not os.path.exists(PICTURES_DIR):
+    PICTURES_DIR = "/storage/emulated/0/Pictures"
+
+# Output download directory
 DOWNLOAD_DIR = os.path.join(BASE_DIR, "renders")
+if not os.path.exists(DOWNLOAD_DIR):
+    DOWNLOAD_DIR = "/storage/emulated/0/Download"
+if not os.path.exists(DOWNLOAD_DIR):
+    DOWNLOAD_DIR = BASE_DIR
+
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 # -------------------------------------------------------------
-# FONT RESOLUTION (Strictly repository folder)
+# FONT RESOLUTION
 # -------------------------------------------------------------
 def get_font_path(lang="en"):
-    """Finds appropriate font files for English, Malayalam, and Tamil from the repo."""
+    """Finds appropriate font files for English, Malayalam, and Tamil."""
     if lang == "ml":
         candidates = [
             os.path.join(BASE_DIR, "AnekMalayalam-ExtraBold.ttf"),
-            os.path.join(BASE_DIR, "AnekMalayalam-Bold.ttf")
+            os.path.join(BASE_DIR, "AnekMalayalam-Bold.ttf"),
+            os.path.join(DOWNLOAD_DIR, "AnekMalayalam-ExtraBold.ttf"),
+            os.path.join(DOWNLOAD_DIR, "AnekMalayalam-Bold.ttf"),
+            "/storage/emulated/0/Download/AnekMalayalam-ExtraBold.ttf",
+            "/storage/emulated/0/Download/AnekMalayalam-Bold.ttf",
+            "AnekMalayalam-ExtraBold.ttf",
+            "AnekMalayalam-Bold.ttf"
         ]
     elif lang == "ta":
         candidates = [
             os.path.join(BASE_DIR, "AnekTamil-ExtraBold.ttf"),
-            os.path.join(BASE_DIR, "AnekTamil-Bold.ttf")
+            os.path.join(BASE_DIR, "AnekTamil-Bold.ttf"),
+            os.path.join(DOWNLOAD_DIR, "AnekTamil-ExtraBold.ttf"),
+            os.path.join(DOWNLOAD_DIR, "AnekTamil-Bold.ttf"),
+            "/storage/emulated/0/Download/AnekTamil-ExtraBold.ttf",
+            "/storage/emulated/0/Download/AnekTamil-Bold.ttf",
+            "AnekTamil-ExtraBold.ttf",
+            "AnekTamil-Bold.ttf"
         ]
     else:  # en
         candidates = [
             os.path.join(BASE_DIR, "Montserrat-ExtraBold.ttf"),
             os.path.join(BASE_DIR, "Montserrat-Bold.ttf"),
-            os.path.join(BASE_DIR, "Anton-Regular.ttf")
+            os.path.join(BASE_DIR, "Anton-Regular.ttf"),
+            os.path.join(DOWNLOAD_DIR, "Montserrat-ExtraBold.ttf"),
+            os.path.join(DOWNLOAD_DIR, "Anton-Regular.ttf"),
+            "/storage/emulated/0/Download/Montserrat-ExtraBold.ttf",
+            "/storage/emulated/0/Download/Anton-Regular.ttf",
+            "Montserrat-ExtraBold.ttf",
+            "/system/fonts/Roboto-Bold.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
         ]
 
     for path in candidates:
@@ -447,13 +477,12 @@ def parse_lottery_entry(title, content):
 
 
 # -------------------------------------------------------------
-# BOT EXPORT FUNCTION (CALLABLE FROM APP.PY)
+# BOT EXPORT FUNCTION (CALLABLE DIRECTLY FROM APP.PY)
 # -------------------------------------------------------------
 def generate_tri_thumbnails(lottery_title: str, draw_date_str: str, out_dir: str, prize_money_str: str = "1 CRORE"):
     """
     Renders 3 Thumbnails (English, Malayalam, Tamil) for Telegram Bot integration.
     """
-    # 1. Parse Date
     date_match = re.search(r'(\d{2})[./-](\d{2})[./-](\d{4})', draw_date_str)
     if date_match:
         d, m, y = int(date_match.group(1)), int(date_match.group(2)), int(date_match.group(3))
@@ -463,7 +492,6 @@ def generate_tri_thumbnails(lottery_title: str, draw_date_str: str, out_dir: str
 
     date_file_tag = f"{d:02d}-{m:02d}-{y}"
 
-    # 2. Parse Lottery Name and Code
     lot_name_en = lottery_title.upper().strip()
     code_str = ""
 
@@ -479,7 +507,7 @@ def generate_tri_thumbnails(lottery_title: str, draw_date_str: str, out_dir: str
 
     prize_en = prize_money_str.upper().replace("₹", "").strip() or "1 CRORE"
 
-    # 3. Process Background from 'Lottery' folder
+    # Background processing from 'Lottery' folder
     cached_middle_rgb = None
     if os.path.exists(PICTURES_DIR):
         png_files = [f for f in os.listdir(PICTURES_DIR) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
@@ -496,7 +524,7 @@ def generate_tri_thumbnails(lottery_title: str, draw_date_str: str, out_dir: str
                 sharpened_bgr = cv2.filter2D(enhanced_bgr, -1, kernel)
                 cached_middle_rgb = cv2.cvtColor(sharpened_bgr, cv2.COLOR_BGR2RGB)
 
-    # 4. English Setup
+    # 1. English Setup
     en_text1 = f"{lot_name_en} {code_str}".strip()
     en_date = f"{d} {ENGLISH_MONTHS.get(m, 'AUGUST')} {y}"
     en_suffix = "RESULT"
@@ -504,7 +532,7 @@ def generate_tri_thumbnails(lottery_title: str, draw_date_str: str, out_dir: str
     en_text4 = "WATCH OFFICIAL FULL RESULT"
     font_en = get_font_path("en")
 
-    # 5. Malayalam Setup
+    # 2. Malayalam Setup
     ml_lot_name = LOTTERY_NAMES_MALAYALAM.get(lot_name_en, lot_name_en)
     ml_text1 = f"{ml_lot_name} {code_str}".strip()
     ml_date = f"{d} {MALAYALAM_MONTHS.get(m, 'ആഗസ്റ്റ്')} {y}"
@@ -513,7 +541,7 @@ def generate_tri_thumbnails(lottery_title: str, draw_date_str: str, out_dir: str
     ml_text4 = "ഔദ്യോഗിക ഫലം അറിയാം"
     font_ml = get_font_path("ml")
 
-    # 6. Tamil Setup
+    # 3. Tamil Setup
     if lot_name_en in LOTTERY_NAMES_TAMIL:
         ta_lot_name = LOTTERY_NAMES_TAMIL[lot_name_en]
     else:
@@ -618,7 +646,7 @@ def main():
     prize_en = chosen["prize_money"]
     date_file_tag = f"{d:02d}-{m:02d}-{y}"
 
-    # 1. Background processing from 'Lottery' folder
+    # 1. PROCESS BACKGROUND IMAGE
     cached_middle_rgb = None
     if os.path.exists(PICTURES_DIR):
         png_files = [f for f in os.listdir(PICTURES_DIR) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
@@ -635,7 +663,7 @@ def main():
                 sharpened_bgr = cv2.filter2D(enhanced_bgr, -1, kernel)
                 cached_middle_rgb = cv2.cvtColor(sharpened_bgr, cv2.COLOR_BGR2RGB)
 
-    # 2. English Setup
+    # 2. ASSEMBLE TEXT FOR ALL 3 LANGUAGES
     en_text1 = f"{lot_name_en} {code_str}".strip()
     en_date = f"{d} {ENGLISH_MONTHS.get(m, 'AUGUST')} {y}"
     en_suffix = "RESULT"
@@ -643,7 +671,6 @@ def main():
     en_text4 = "WATCH OFFICIAL FULL RESULT"
     font_en = get_font_path("en")
 
-    # 3. Malayalam Setup
     ml_lot_name = LOTTERY_NAMES_MALAYALAM.get(lot_name_en, lot_name_en)
     ml_text1 = f"{ml_lot_name} {code_str}".strip()
     ml_date = f"{d} {MALAYALAM_MONTHS.get(m, 'ആഗസ്റ്റ്')} {y}"
@@ -652,7 +679,6 @@ def main():
     ml_text4 = "ഔദ്യോഗിക ഫലം അറിയാം"
     font_ml = get_font_path("ml")
 
-    # 4. Tamil Setup
     if lot_name_en in LOTTERY_NAMES_TAMIL:
         ta_lot_name = LOTTERY_NAMES_TAMIL[lot_name_en]
     else:
@@ -677,7 +703,7 @@ def main():
     out_ta = render_thumbnail(ta_text1, ta_date, ta_suffix, ta_text3, ta_text4, font_ta, path_ta, cached_middle_rgb)
 
     print("\n\033[92m" + "═" * 72 + "\033[0m")
-    print("\033[92m✨ SUCCESS! 3 Thumbnails Generated:\033[0m")
+    print("\033[92m✨ SUCCESS! 3 Thumbnails Generated and Saved:\033[0m")
     if out_en:
         print(f"\033[93m🇬🇧 [English]   : {out_en}\033[0m")
     if out_ml:
