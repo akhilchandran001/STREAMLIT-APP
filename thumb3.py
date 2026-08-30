@@ -17,64 +17,34 @@ from bs4 import BeautifulSoup
 from PIL import Image, ImageDraw, ImageFont
 
 # -------------------------------------------------------------
-# CONFIGURATION & STORAGE PATHS
+# CONFIGURATION & STORAGE PATHS (GITHUB REPO ROOT)
 # -------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FEED_URL = "https://www.keralalotteries.net/feeds/posts/default?alt=json&max-results=10"
-
-# Target 'Lottery' folder in the repo, with fallback to storage pictures
 PICTURES_DIR = os.path.join(BASE_DIR, "Lottery")
-if not os.path.exists(PICTURES_DIR):
-    PICTURES_DIR = "/storage/emulated/0/Pictures"
-
-# Output download directory
 DOWNLOAD_DIR = os.path.join(BASE_DIR, "renders")
-if not os.path.exists(DOWNLOAD_DIR):
-    DOWNLOAD_DIR = "/storage/emulated/0/Download"
-if not os.path.exists(DOWNLOAD_DIR):
-    DOWNLOAD_DIR = BASE_DIR
-
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 # -------------------------------------------------------------
-# FONT RESOLUTION
+# FONT RESOLUTION (Strictly repository root fonts)
 # -------------------------------------------------------------
 def get_font_path(lang="en"):
-    """Finds appropriate font files for English, Malayalam, and Tamil."""
+    """Finds appropriate ExtraBold/Bold font files for English, Malayalam, and Tamil from the repo."""
     if lang == "ml":
         candidates = [
             os.path.join(BASE_DIR, "AnekMalayalam-ExtraBold.ttf"),
-            os.path.join(BASE_DIR, "AnekMalayalam-Bold.ttf"),
-            os.path.join(DOWNLOAD_DIR, "AnekMalayalam-ExtraBold.ttf"),
-            os.path.join(DOWNLOAD_DIR, "AnekMalayalam-Bold.ttf"),
-            "/storage/emulated/0/Download/AnekMalayalam-ExtraBold.ttf",
-            "/storage/emulated/0/Download/AnekMalayalam-Bold.ttf",
-            "AnekMalayalam-ExtraBold.ttf",
-            "AnekMalayalam-Bold.ttf"
+            os.path.join(BASE_DIR, "AnekMalayalam-Bold.ttf")
         ]
     elif lang == "ta":
         candidates = [
             os.path.join(BASE_DIR, "AnekTamil-ExtraBold.ttf"),
-            os.path.join(BASE_DIR, "AnekTamil-Bold.ttf"),
-            os.path.join(DOWNLOAD_DIR, "AnekTamil-ExtraBold.ttf"),
-            os.path.join(DOWNLOAD_DIR, "AnekTamil-Bold.ttf"),
-            "/storage/emulated/0/Download/AnekTamil-ExtraBold.ttf",
-            "/storage/emulated/0/Download/AnekTamil-Bold.ttf",
-            "AnekTamil-ExtraBold.ttf",
-            "AnekTamil-Bold.ttf"
+            os.path.join(BASE_DIR, "AnekTamil-Bold.ttf")
         ]
     else:  # en
         candidates = [
             os.path.join(BASE_DIR, "Montserrat-ExtraBold.ttf"),
             os.path.join(BASE_DIR, "Montserrat-Bold.ttf"),
-            os.path.join(BASE_DIR, "Anton-Regular.ttf"),
-            os.path.join(DOWNLOAD_DIR, "Montserrat-ExtraBold.ttf"),
-            os.path.join(DOWNLOAD_DIR, "Anton-Regular.ttf"),
-            "/storage/emulated/0/Download/Montserrat-ExtraBold.ttf",
-            "/storage/emulated/0/Download/Anton-Regular.ttf",
-            "Montserrat-ExtraBold.ttf",
-            "/system/fonts/Roboto-Bold.ttf",
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+            os.path.join(BASE_DIR, "Anton-Regular.ttf")
         ]
 
     for path in candidates:
@@ -169,11 +139,50 @@ def transliterate_to_tamil(text: str) -> str:
     return text
 
 
+def clean_prize_to_pure_words(prize_str: str) -> str:
+    """Converts any raw prize string/number into pure English words format without digit noise."""
+    p = str(prize_str).upper().replace("₹", "").replace("RS.", "").replace("RS", "").strip()
+    p = re.sub(r'\[.*?\]|\(.*?\)', '', p).strip()
+    
+    if "25 CRORE" in p or "250000000" in p:
+        return "25 CRORE"
+    elif "20 CRORE" in p or "200000000" in p:
+        return "20 CRORE"
+    elif "16 CRORE" in p or "160000000" in p:
+        return "16 CRORE"
+    elif "12 CRORE" in p or "120000000" in p:
+        return "12 CRORE"
+    elif "10 CRORE" in p or "100000000" in p:
+        return "10 CRORE"
+    elif "6 CRORE" in p or "60000000" in p:
+        return "6 CRORE"
+    elif "5 CRORE" in p or "50000000" in p:
+        return "5 CRORE"
+    elif "1 CRORE" in p or "10000000" in p or "1,00,00,000" in p:
+        return "1 CRORE"
+    elif "80 LAKH" in p or "8000000" in p or "80,00,000" in p:
+        return "80 LAKHS"
+    elif "75 LAKH" in p or "7500000" in p or "75,00,000" in p:
+        return "75 LAKHS"
+    elif "70 LAKH" in p or "7000000" in p or "70,00,000" in p:
+        return "70 LAKHS"
+    elif "50 LAKH" in p or "5000000" in p or "50,00,000" in p:
+        return "50 LAKHS"
+    
+    match = re.search(r'\b(\d+)\s*(CRORE|LAKH|CRORES|LAKHS)\b', p)
+    if match:
+        num, unit = match.group(1), match.group(2)
+        if "LAKH" in unit:
+            return f"{num} LAKHS"
+        return f"{num} CRORE"
+        
+    return "1 CRORE"
+
+
 def convert_prize_to_malayalam(english_prize_str: str) -> str:
     """Converts English prize text into Malayalam currency format."""
-    clean_str = english_prize_str.upper().replace("₹", "").strip()
+    clean_str = clean_prize_to_pure_words(english_prize_str)
     prize_map = {
-        "1 CRORE": "₹1 കോടി",
         "25 CRORE": "₹25 കോടി",
         "20 CRORE": "₹20 കോടി",
         "16 CRORE": "₹16 കോടി",
@@ -181,27 +190,19 @@ def convert_prize_to_malayalam(english_prize_str: str) -> str:
         "10 CRORE": "₹10 കോടി",
         "6 CRORE": "₹6 കോടി",
         "5 CRORE": "₹5 കോടി",
+        "1 CRORE": "₹1 കോടി",
         "80 LAKHS": "₹80 ലക്ഷം",
         "75 LAKHS": "₹75 ലക്ഷം",
         "70 LAKHS": "₹70 ലക്ഷം",
-        "50 LAKHS": "₹50 ലക്ഷം",
-        "10000000": "₹1 കോടി",
-        "8000000": "₹80 ലക്ഷം",
-        "7500000": "₹75 ലക്ഷം"
+        "50 LAKHS": "₹50 ലക്ഷം"
     }
-    for k, v in prize_map.items():
-        if k in clean_str:
-            return v
-    clean_str = clean_str.replace("CRORES", "കോടി").replace("CRORE", "കോടി")
-    clean_str = clean_str.replace("LAKHS", "ലക്ഷം").replace("LAKH", "ലക്ഷം")
-    return f"₹{clean_str}"
+    return prize_map.get(clean_str, f"₹{clean_str}")
 
 
 def convert_prize_to_tamil(english_prize_str: str) -> str:
     """Converts English prize text into Tamil currency format."""
-    clean_str = english_prize_str.upper().replace("₹", "").strip()
+    clean_str = clean_prize_to_pure_words(english_prize_str)
     prize_map = {
-        "1 CRORE": "₹1 கோடி",
         "25 CRORE": "₹25 கோடி",
         "20 CRORE": "₹20 கோடி",
         "16 CRORE": "₹16 கோடி",
@@ -209,20 +210,13 @@ def convert_prize_to_tamil(english_prize_str: str) -> str:
         "10 CRORE": "₹10 கோடி",
         "6 CRORE": "₹6 கோடி",
         "5 CRORE": "₹5 கோடி",
+        "1 CRORE": "₹1 கோடி",
         "80 LAKHS": "₹80 லட்சம்",
         "75 LAKHS": "₹75 லட்சம்",
         "70 LAKHS": "₹70 லட்சம்",
-        "50 LAKHS": "₹50 லட்சம்",
-        "10000000": "₹1 கோடி",
-        "8000000": "₹80 லட்சம்",
-        "7500000": "₹75 லட்சம்"
+        "50 LAKHS": "₹50 லட்சம்"
     }
-    for k, v in prize_map.items():
-        if k in clean_str:
-            return v
-    clean_str = clean_str.replace("CRORES", "கோடி").replace("CRORE", "கோடி")
-    clean_str = clean_str.replace("LAKHS", "லட்சம்").replace("LAKH", "லட்சம்")
-    return f"₹{clean_str}"
+    return prize_map.get(clean_str, f"₹{clean_str}")
 
 
 # -------------------------------------------------------------
@@ -441,30 +435,16 @@ def parse_lottery_entry(title, content):
     if not lottery_name:
         lottery_name = "KERALA LOTTERY"
 
-    # 4. Parse 1st Prize Money
+    # 4. Parse 1st Prize Money (Strictly pure words)
     prize_match = re.search(r'1st\s*Prize[^\n<:]*[:\s]*[₹Rs.]*([\d,]+)/-?\s*\[?([^\]\n<]+)?\]?', full_text, re.IGNORECASE)
     prize_money = "1 CRORE"
     if prize_match:
         bracket_val = prize_match.group(2)
         raw_num = prize_match.group(1)
         if bracket_val and any(k in bracket_val.lower() for k in ["crore", "lakh"]):
-            prize_money = bracket_val.strip().upper()
+            prize_money = clean_prize_to_pure_words(bracket_val)
         elif raw_num:
-            clean_num = raw_num.replace(",", "")
-            if clean_num == "10000000":
-                prize_money = "1 CRORE"
-            elif clean_num == "7500000":
-                prize_money = "75 LAKHS"
-            elif clean_num == "8000000":
-                prize_money = "80 LAKHS"
-            elif clean_num == "250000000":
-                prize_money = "25 CRORE"
-            elif clean_num == "120000000":
-                prize_money = "12 CRORE"
-            elif clean_num == "100000000":
-                prize_money = "10 CRORE"
-            else:
-                prize_money = raw_num
+            prize_money = clean_prize_to_pure_words(raw_num)
     else:
         if "1 Crore" in full_text or "1 crore" in full_text or "1 CRORE" in full_text:
             prize_money = "1 CRORE"
@@ -505,9 +485,9 @@ def generate_tri_thumbnails(lottery_title: str, draw_date_str: str, out_dir: str
             lot_name_en = name
             break
 
-    prize_en = prize_money_str.upper().replace("₹", "").strip() or "1 CRORE"
+    prize_en = clean_prize_to_pure_words(prize_money_str)
 
-    # Background processing from 'Lottery' folder
+    # Background processing randomly from repo 'Lottery' folder
     cached_middle_rgb = None
     if os.path.exists(PICTURES_DIR):
         png_files = [f for f in os.listdir(PICTURES_DIR) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
@@ -646,7 +626,7 @@ def main():
     prize_en = chosen["prize_money"]
     date_file_tag = f"{d:02d}-{m:02d}-{y}"
 
-    # 1. PROCESS BACKGROUND IMAGE
+    # 1. PROCESS BACKGROUND IMAGE FROM 'Lottery' REPO FOLDER
     cached_middle_rgb = None
     if os.path.exists(PICTURES_DIR):
         png_files = [f for f in os.listdir(PICTURES_DIR) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
