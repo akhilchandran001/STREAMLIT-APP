@@ -1146,6 +1146,8 @@ def render_bang_video(theme, prize_heading, item, lottery_title, out_path, base_
 
     hero_asset = pre_render_tight_hero_text(ticket_num)
     orig_tw, orig_th = hero_asset.size
+    hero_alpha_mask = hero_asset.split()[3]  # Mask for the diagonal light sheen sweep
+    
     ribbon_asset = pre_render_ribbon_bang(prize_heading)
     glass_asset = pre_render_glass_card(district)
     
@@ -1154,8 +1156,8 @@ def render_bang_video(theme, prize_heading, item, lottery_title, out_path, base_
 
     base_bg = bg_asset.copy()
     b_draw = ImageDraw.Draw(base_bg)
-    b_draw.text((WIDTH//2, 60), "KERALA STATE LOTTERIES • OFFICIAL RESULT", font=load_font("bold", 18), fill=(200, 208, 224, 255), anchor="mm")
-    b_draw.text((WIDTH//2, 110), lottery_title, font=load_font("black", 46), fill=(255, 255, 255, 255), anchor="mm")
+    b_draw.text((WIDTH//2, 40), "KERALA STATE LOTTERIES • OFFICIAL RESULT", font=load_font("bold", 18), fill=(200, 208, 224, 255), anchor="mm")
+    b_draw.text((WIDTH//2, 90), lottery_title, font=load_font("black", 46), fill=(255, 255, 255, 255), anchor="mm")
     base_bg.alpha_composite(ribbon_asset)
 
     v_filters = []
@@ -1203,57 +1205,94 @@ def render_bang_video(theme, prize_heading, item, lottery_title, out_path, base_
         canvas = base_bg.copy()
 
         shake_dx, shake_dy = 0, 0
+        flash_alpha = 0
+
+        # Slide in District Card
         if time_sec > (impact_time - 0.2):
             slide = ease_out_expo(min((time_sec - (impact_time - 0.2)) / 0.3, 1.0))
             temp = Image.new("RGBA", (WIDTH, HEIGHT), (0,0,0,0))
             temp.paste(glass_asset, (0, int(100 * (1 - slide))))
             canvas.alpha_composite(temp)
 
+            # Drop in Hero Number with extreme zoom
             hp = min((time_sec - (impact_time - 0.2)) / 0.2, 1.0)
             scale = 2.5 - (ease_out_expo(hp) * 1.5)
             nw, nh = max(10, int(orig_tw * scale)), max(10, int(orig_th * scale))
             scaled_hero = hero_asset.resize((nw, nh), Image.Resampling.BILINEAR)
-            canvas.paste(scaled_hero, (WIDTH // 2 - nw // 2, 380 - nh // 2), scaled_hero)
+            hero_pos = (WIDTH // 2 - nw // 2, 380 - nh // 2)
+            canvas.paste(scaled_hero, hero_pos, scaled_hero)
 
+            # 1. EXACT INTRO.PY POOTHIRI EXPLOSION & CAMERA FLASH
             if time_sec >= impact_time:
                 if not confetti_triggered:
                     confetti_triggered = True
-                    for _ in range(140):
-                        angle = random.uniform(0, 2*math.pi)
-                        speed = random.uniform(8, 30)
-                        confetti.append({'x': WIDTH//2, 'y': 380, 'vx': math.cos(angle)*speed, 'vy': math.sin(angle)*speed-10, 'col': random.choice([(255,215,0), (0,212,255), (255,0,150), (255,255,255)]), 'size': random.randint(3, 8), 'life': 1.0})
+                    colors = [(255, 215, 0), (255, 255, 255), (255, 80, 0), (255, 200, 100), (0, 220, 255)]
+                    for _ in range(120):
+                        angle = random.uniform(0, 2 * math.pi)
+                        speed = random.uniform(10, 35)
+                        confetti.append({
+                            'x': WIDTH // 2,
+                            'y': 380,
+                            'vx': math.cos(angle) * speed,
+                            'vy': math.sin(angle) * speed - 11,
+                            'col': random.choice(colors),
+                            'size': random.randint(3, 8),
+                            'life': 1.0
+                        })
 
-                frames_since = int(frame - (impact_time * FPS))
-                if frames_since < 5:
-                    intensity = int(14 - (frames_since * 3))
-                    shake_dx, shake_dy = random.randint(-intensity, intensity), random.randint(-intensity, intensity)
+                frames_since_impact = int((time_sec - impact_time) * FPS)
+                if frames_since_impact < 5:
+                    intensity = int(15 - (frames_since_impact * 3))
+                    shake_dx = random.randint(-intensity, intensity)
+                    shake_dy = random.randint(-intensity, intensity)
+                    if frames_since_impact == 0:
+                        flash_alpha = 180  # The bright camera flash
 
-        if time_sec >= impact_time:
-            c_layer = Image.new("RGBA", (WIDTH, HEIGHT), (0,0,0,0))
+                # 2. EXACT INTRO.PY DIAGONAL LIGHT SWEEP ACROSS NUMBER
+                sweep_start = impact_time + 0.2
+                sweep_end = impact_time + 0.85
+                if sweep_start <= time_sec <= sweep_end:
+                    beam_prog = (time_sec - sweep_start) / (sweep_end - sweep_start)
+                    bx = int(70 + (1070 * beam_prog))
+                    
+                    beam_layer = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
+                    b_draw_layer = ImageDraw.Draw(beam_layer)
+                    poly = [(bx + 80, 0), (bx + 215, 0), (bx - 80, HEIGHT), (bx - 215, HEIGHT)]
+                    b_draw_layer.polygon(poly, fill=(255, 255, 255, 190))
+                    beam_layer = beam_layer.filter(ImageFilter.GaussianBlur(10))
+                    
+                    # Mask beam to only shine on the winning number
+                    temp_mask = Image.new("L", (WIDTH, HEIGHT), 0)
+                    temp_mask.paste(hero_alpha_mask, hero_pos)
+                    masked_beam = beam_layer.copy()
+                    masked_beam.putalpha(ImageChops.multiply(beam_layer.split()[3], temp_mask))
+                    canvas.alpha_composite(masked_beam)
+
+        # 3. DRAW RADIAL EXPLOSION PARTICLES (POOTHIRI)
+        if confetti:
+            c_layer = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
             c_draw = ImageDraw.Draw(c_layer)
+            active_confetti = False
             for p in confetti:
                 if p['life'] > 0:
+                    active_confetti = True
                     p['x'] += p['vx']
                     p['y'] += p['vy']
                     p['vy'] += 1.5
-                    p['life'] -= 0.025
+                    p['life'] -= 0.022
+                    cop = int(255 * max(p['life'], 0.0))
+                    px, py = int(p['x']), int(p['y'])
                     s = int(p['size'])
-                    c_draw.rectangle([int(p['x'])-s, int(p['y'])-s//2, int(p['x'])+s, int(p['y'])+s//2], fill=p['col']+(int(255*max(p['life'], 0)),))
-            canvas.alpha_composite(c_layer)
+                    c_draw.rectangle([px - s, py - s // 2, px + s, py + s // 2], fill=p['col'] + (cop,))
+            if active_confetti:
+                canvas.alpha_composite(c_layer)
 
-            glitter_layer = Image.new("RGBA", (WIDTH, HEIGHT), (0,0,0,0))
-            g_draw = ImageDraw.Draw(glitter_layer)
-            for g in box_glitters:
-                g['phase'] += g['speed']
-                pulse = (math.sin(g['phase']) + 1) / 2
-                s = int(5 + 20 * pulse)
-                g_op = int(50 + 205 * pulse)
-                g_draw.line([(g['x']-s, g['y']), (g['x']+s, g['y'])], fill=(255, 235, 100, g_op), width=3)
-                g_draw.line([(g['x'], g['y']-s), (g['x'], g['y']+s)], fill=(255, 235, 100, g_op), width=3)
-                g_draw.ellipse([g['x']-4, g['y']-4, g['x']+4, g['y']+4], fill=(255, 255, 255, g_op))
-            canvas.alpha_composite(glitter_layer.filter(ImageFilter.GaussianBlur(2)))
+        # Draw Flash on screen if impact frame
+        if flash_alpha > 0:
+            flash_layer = Image.new("RGBA", (WIDTH, HEIGHT), (255, 255, 255, flash_alpha))
+            canvas.alpha_composite(flash_layer)
 
-        final_frame = Image.new("RGBA", (WIDTH, HEIGHT), (0,0,0,255))
+        final_frame = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 255))
         final_frame.paste(canvas, (int(shake_dx), int(shake_dy)))
         bgr_frame = cv2.cvtColor(np.array(final_frame), cv2.COLOR_RGBA2BGR)
         process.stdin.write(bgr_frame.tobytes())
