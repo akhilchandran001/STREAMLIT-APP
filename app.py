@@ -55,8 +55,8 @@ DURATION_CONSOLATION = 20.0      # Scroll duration for Consolation
 DURATION_4TH_PRIZE = 30.0        # Scroll duration for 4th Prize
 DURATION_5TH_PRIZE = 25.0        # Scroll duration for 5th Prize
 DURATION_6TH_PRIZE = 35.0        # Scroll duration for 6th Prize
-DURATION_7TH_PRIZE = 110.0       # Scroll duration for 7th Prize
-DURATION_8TH_PRIZE = 110.0       # Scroll duration for 8th Prize
+DURATION_7TH_PRIZE = 70.0       # Scroll duration for 7th Prize
+DURATION_8TH_PRIZE = 90.0       # Scroll duration for 8th Prize
 DURATION_9TH_PRIZE = 110.0       # Scroll duration for 9th Prize
 
 # 2. SCROLL SPEED SETTINGS (END DELAYS IN SECONDS)
