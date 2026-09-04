@@ -224,11 +224,29 @@ except ImportError:
     USE_CURL_CFFI = False
 
 def http_get(url: str):
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-    if USE_CURL_CFFI:
-        return cffi_requests.get(url, impersonate="chrome", timeout=10)
-    return standard_requests.get(url, headers=headers, timeout=10)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Encoding": "gzip, deflate",  # Stops stream cut-off at 5th prize
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache"
+    }
+    # Cache buster to bypass US Edge CDN stale cache
+    ts = int(time.time() * 1000)
+    busted_url = f"{url}{'&' if '?' in url else '?'}_ts={ts}"
 
+    for attempt in range(3):
+        try:
+            if USE_CURL_CFFI:
+                res = cffi_requests.get(busted_url, headers=headers, impersonate="chrome120", allow_redirects=True, timeout=20)
+            else:
+                res = standard_requests.get(busted_url, headers=headers, allow_redirects=True, timeout=20)
+            if res.status_code == 200 and len(res.text) > 1500:
+                return res
+        except Exception:
+            time.sleep(1.0)
+    return None
+    
 # --- COMPLETE MALAYALAM DICTIONARIES ---
 ALPHA_TO_ML = {
     'A': 'എ', 'B': 'ബി', 'C': 'സി', 'D': 'ഡി', 'E': 'ഇ', 'F': 'എഫ്',
