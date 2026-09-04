@@ -442,18 +442,33 @@ YEAR_BLACKLIST = {"2024", "2025", "2026", "2027", "2028", "2029", "2030"}
 
 def fetch_last_10_draws():
     """Fetches real-time last 10 draws from Blogger JSON API, bypassing static landing posts."""
-    cache_buster = int(time.time())
-    url = f"https://www.keralalotteries.net/feeds/posts/default?alt=json&max-results=10&_nocache={cache_buster}"
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    ts = int(time.time() * 1000)
+    url = f"https://www.keralalotteries.net/feeds/posts/default?alt=json&max-results=10&_cb={ts}"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache"
+    }
     
     draws = []
+    data = None
+    for attempt in range(3):
+        try:
+            if USE_CURL_CFFI:
+                res = cffi_requests.get(url, headers=headers, impersonate="chrome120", allow_redirects=True, timeout=20)
+            else:
+                res = standard_requests.get(url, headers=headers, allow_redirects=True, timeout=20)
+            if res.status_code == 200:
+                data = res.json()
+                break
+        except Exception:
+            time.sleep(1.0)
+
     try:
-        if USE_CURL_CFFI:
-            res = cffi_requests.get(url, headers=headers, impersonate="chrome", timeout=10)
-        else:
-            res = standard_requests.get(url, headers=headers, timeout=10)
-            
-        data = res.json()
+        if not data:
+            return []
+        entries = data.get("feed", {}).get("entry", [])
         entries = data.get("feed", {}).get("entry", [])
 
         for entry in entries:
