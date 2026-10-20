@@ -780,7 +780,7 @@ def generate_youtube_package(lottery_title, draw_date, video_durations_map, priz
     title_1 = f"KERALA LOTTERY {name_str} {code_str}| LIVE LOTTERY RESULT TODAY {date_dot}| KERALA LOTTERY LIVE RESULT|"
     title_2 = f"KERALA {name_str} {code_str} KERALA LOTTERY RESULT {date_short} | LIVE KERALA LOTTERY RESULT TODAY."
 
-        desc_part1 = f"""{title_1}
+    desc_part1 = f"""{title_1}
 #{name_clean} #{code_clean} #{date_und} #{name_clean}_{code_clean}
 
 ⏱️ TIMESTAMPS:
