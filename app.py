@@ -780,146 +780,103 @@ def generate_youtube_package(lottery_title, draw_date, video_durations_map, priz
     title_1 = f"KERALA LOTTERY {name_str} {code_str}| LIVE LOTTERY RESULT TODAY {date_dot}| KERALA LOTTERY LIVE RESULT|"
     title_2 = f"KERALA {name_str} {code_str} KERALA LOTTERY RESULT {date_short} | LIVE KERALA LOTTERY RESULT TODAY."
 
-    description = f"""{title_1}
-#{name_clean} #{code_clean} #{date_und} #KeralaLotteryLiveResult #KeralaLottery
+        desc_part1 = f"""{title_1}
+#{name_clean} #{code_clean} #{date_und} #{name_clean}_{code_clean}
 
 ⏱️ TIMESTAMPS:
 {timestamps_text}
 
 📲 Join our FREE WhatsApp Channel for Instant PDF Updates & Weekly Analysis (Link in About Section / Description)!
 
-Query Solved.
-kerala lottery result
-Kerala lottery result live
-kerala lottery result live today
-Kerala Lottery Result Today
-kerala lottery results
-Kerala lottery today result
-live kerala lottery today result
-lottery result
-Lottery results
-lottery results today
-today lottery
-today lottery result
-
-#KeralaLotteryLiveResult
-#{name_clean}
-#{name_clean}_{date_slash}
-#{name_clean.lower()}_{code_str.lower()}_{date_dash}
-#keralalotteryresult
+#KeralaLotteryResult
+#lotteryresulttoday
+#keralalotteryresulttoday
+#keralalottery
 #lotteryresult
-#lotteryliveresult
-#{name_clean}_result
-#{name_clean}_liveresult
+#innathelotteryresult
+#keralalotterytoday
+#todaylotteryresult
+#lotteryphalam
+#keralalotteryresult
+#bhagyakuri
+#lotteryresulttodaymalayalam
+#todaylotteryresultkerala
+#innathelottery
+#keralalotteryphalamtoday
+#lotteryresultmalayalam
+#lotterykerala
+#keralabhagyakuri
+#keralalotterylive
+#lotterykeralatoday
+#todaylotteryphalam
+#todaylotteryresultmalayalam
+#dailymalayalamlottery
+#lotteryresultmalayalamtoday
+#lotteryphalammalayalam
+#malayalamlotteryresult
+#dailylotteryresult
+#lotteryresulttodayinkerala
+#keralalotteryticket
+#3pmlotteryresulttoday
+#todaylotteryresultinkerala
+#keralastatelottery
+#lotterymarketinindia
+#today_lottery_result_in_kerala
+#innathelotteryphalam
+#keralalotteryresultlive
+#malayalamlottery
+#lotterymalayalam
+#livelotteryresult
+#todaylotteryresultkeralalive
+#lotteryresulttoday3pm"""
 
-{name_str.lower()} kerala lottery live result
-{name_str} kerala lottery result
-kerala lottery live result {name_str.lower()}
-kerala lottery result {name_str}
-
-{name_str} live today
-{name_str} {date_slash} live today
-
-Kerala Lottery Result Today {name_str}
-Kerala Lottery Result Today {name_str} {code_str}
-Kerala Lottery Result Today {name_str} {date_slash}
-
-kerala lottery results {name_str}
-kerala lottery results {name_str} {code_str}
-kerala lottery results {name_str} {date_slash}
-
-{name_str} live today
-{name_str} {code_str} live today
-{name_str} {date_slash} live today
-
-Keralalotteries.com {name_str}
-Keralalotteries.com {name_str} {code_str}
-Keralalotteries.com {name_str} {date_slash}
-
-live kerala lottery result {name_str}
-live kerala lottery result {name_str} {code_str}
-live kerala lottery result {name_str} {date_slash}
-
-{name_str} kerala lottery
-{name_str} {date_slash} kerala lottery
-{name_str} kerala lottery result
-{name_str} {code_str} kerala lottery result
-{name_str} {date_slash} kerala lottery result
-
-{name_str} lottery result
-{name_str} {date_slash} lottery result
-
-today kerala lottery
-today kerala result
-today result kerala
-result today kerala lottery
-today lottery
-lottery today
-kerala lottery today
-
-_{name_clean}_{date_slash}
-_{date_slash}_{name_clean}
-
-{code_str.lower()}_{name_clean.lower()}_{date_dash}
-{code_str.lower()}_{date_dash}_{name_clean.lower()}
-
-{name_clean}_{date_slash}
-{name_clean}_{date_dot}_
-{date_slash}_{name_clean}_
-{date_dot}_{name_clean}
-
-{name_str} today live result
-{name_str} kerala today live result
-{name_str} live result kerala
-{name_str} kerala lottery
-
-today live result
-kerala today live result
-live result kerala
-kerala lottery
-
-{date_slash} today live result
-{date_slash} kerala today live result
-{date_slash} live result kerala
-{date_slash} kerala lottery
-
-{date_dot} Kerala Lottery Result
+    desc_part2 = f"""Query Solved:
+today lottery result live
+today lottery result live kerala
+today lottery result {name_str.lower()}
+today lottery result today
+today lottery result malayalam live
+today lottery result 3 pm
+today lottery result live 3pm
+innathe lottery result kerala
+innathe lottery result today
+innathe lottery result lottery result
+innathe lottery result {name_str.lower()}
+innathe lottery result malayalam
+innathe lottery result live
+lottery result today
+lottery result today live
+lottery result yesterday
+kerala lottery result today live
+lottery result lottery result
+lottery result actor
+kerala lottery result live
 kerala lottery result
-Kerala Lottery Result {date_dot}
-Kerala Lottery Result {date_short}
-Kerala lottery result live
-kerala lottery result live today
-Kerala Lottery Result Today
-
-Kerala Lottery Result {code_str}
-Kerala Lottery Result {code_clean}
-kerala lottery result {name_str}
-Kerala Lottery Result {name_str.lower()} {code_str}
-Kerala Lottery Result {name_str.lower()} {code_clean}
-kerala lottery result {name_str}
-Kerala Lottery Result {name_str} {code_str}
-Kerala Lottery Result {name_str} {code_clean}
-
-{code_str}
-{code_str} Kerala Lottery Result
-{code_str} {name_str.lower()}
-{code_str} {name_str}
-{code_clean}
-{code_clean} Kerala Lottery Result
-{code_clean} {name_str.lower()}
-{code_clean} {name_str}
-{name_str.lower()}
-{name_str.lower()} kerala lottery result
-{name_str.lower()} {code_str}
-{name_str.lower()} {code_str} Kerala Lottery Result
-{name_str.lower()} {code_clean}
-{name_str.lower()} {code_clean} Kerala Lottery Result
-{name_str}
-{name_str} kerala lottery result
-{name_str} {code_str}
-{name_str} {code_str} Kerala Lottery Result
-{name_str} {code_clean}
-{name_str} {code_clean} Kerala Lottery Result
+lottery result kerala
+lottery result kerala live
+lottery result kerala video
+lottery result kerala gaan
+lottery result kerala today
+lottery result kerala today live
+lottery result kerala bumper
+lottery result kerala ticket
+{name_str.lower()} lottery result today
+{name_str.lower()} lottery result
+{name_str.lower()} lottery result yesterday
+{name_str.lower()} lottery result today live
+{name_str.lower()} lottery live
+{name_str.lower()} lottery film
+{name_str.lower()} lottery result live
+{name_str.lower()} lottery kerala
+{name_str.lower()} lottery phalam
+{name_str.lower()} lottery result yesterday 3pm
+lottery phalam
+lottery phalam today
+lottery phalam malayalam
+lottery phalam {name_str.lower()}
+lottery phalam live
+innathe lottery phalam
+kerala lottery phalam
 
 Disclaimer:-
 Copyright Disclaimer Under Section 107 of the Copyright Act 1976 allowance is made for "fair use" for purposes such as criticism comment news reporting teaching scholarship and research. Fair use is a use permitted by copyright statute that might otherwise be infringing. Non-profit educational or personal use tips the balance in favor of fair use.
@@ -929,6 +886,8 @@ There Was Not Sell Lottery Tickets and Any illegal Products There Was Play Only 
 Information given in the video is only for Educational Purposes. Viewers should do their own research before playing or investing anything. Also please check lottery rules in your country and state before purchasing as we are not promoting anything.
 
 The prize winners are advised to verify the winning numbers with the results published in the Kerala Government Gazette."""
+
+    description = [desc_part1, desc_part2]
 
     tags = f"kerala lottery result live, live kerala lottery result, kerala lottery result, kerala lottery result today, kerala lottery today result, kerala lottery, lottery result today, today lottery result, today's lottery results, {name_str}, {name_str} lottery result, {name_str} result, {name_str} lottery {code_str}, {date_short} lottery result"
 
