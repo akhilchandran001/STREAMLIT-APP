@@ -919,7 +919,7 @@ async def send_yt_metadata_package(client, chat_id, title_1, title_2, yt_desc, y
         await broadcast_to_channel(client, text=t_msg)
     await asyncio.sleep(0.4)
 
-    desc_chunks = [yt_desc[i:i+3500] for i in range(0, len(yt_desc), 3500)]
+    desc_chunks = yt_desc if isinstance(yt_desc, list) else [yt_desc[i:i+3500] for i in range(0, len(yt_desc), 3500)]
     for idx, chunk in enumerate(desc_chunks):
         header = f"📝 **YOUTUBE DESCRIPTION & TIMESTAMPS (PART {idx+1}/{len(desc_chunks)} - TAP TO COPY):**\n" if len(desc_chunks) > 1 else "📝 **YOUTUBE DESCRIPTION & TIMESTAMPS (TAP TO COPY):**\n"
         d_msg = f"{header}```{chunk}```"
